@@ -15,13 +15,17 @@ router = APIRouter(tags=["health"])
 
 @router.get("/health", response_model=HealthResponse)
 def health_check():
+    """Health check - DB durumunu raporlar ama basarisiz olsa da 200 doner."""
+    db_status = "unknown"
     try:
         db = SessionLocal()
-        db.execute(text("SELECT 1"))
-        db.close()
-        db_status = "healthy"
+        try:
+            db.execute(text("SELECT 1"))
+            db_status = "healthy"
+        finally:
+            db.close()
     except Exception as e:
-        logger.error("Database health check failed: %s", e)
+        logger.warning("Database health check failed: %s", e)
         db_status = f"unhealthy: {e}"
 
     return HealthResponse(

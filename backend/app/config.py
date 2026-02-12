@@ -18,11 +18,11 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     DEBUG: bool = False
 
-    # Connection Pool
-    DB_POOL_SIZE: int = 20
-    DB_MAX_OVERFLOW: int = 10
+    # Connection Pool - Neon serverless icin kucuk tutulmali
+    DB_POOL_SIZE: int = 2
+    DB_MAX_OVERFLOW: int = 3
     DB_POOL_TIMEOUT: int = 30
-    DB_POOL_RECYCLE: int = 300  # 5 dk - Neon auto-suspend uyumlu
+    DB_POOL_RECYCLE: int = 120  # 2 dk - Neon auto-suspend oncesi yenile
     DB_POOL_PRE_PING: bool = True
 
     # CORS
