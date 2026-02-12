@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String
+  company        String    @default("")
+  hashedPassword String    @map("hashed_password")
+  credits        Int       @default(10)
+  isActive       Boolean   @default(true) @map("is_active")
+  isSuperuser    Boolean   @default(false) @map("is_superuser")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  projects       Project[]
+
+  @@map("users")
+}
+
+model Project {
+  id          String               @id @default(cuid())
+  userId      String               @map("user_id")
+  name        String
+  description String               @default("")
+  projectData Json?                @map("project_data")
+  status      String               @default("pending")
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+  owner       User                 @relation(fields: [userId], references: [id])
+  results     OptimizationResult[]
+
+  @@map("projects")
+}
+
+model OptimizationResult {
+  id               String   @id @default(cuid())
+  projectId        String   @map("project_id")
+  bestPlan         Json     @map("best_plan")
+  scenarios        Json
+  evolutionHistory Json     @map("evolution_history")
+  durationMs       Int      @map("duration_ms")
+  populationSize   Int      @map("population_size")
+  generations      Int
+  totalSimulations Int      @map("total_simulations")
+  createdAt        DateTime @default(now()) @map("created_at")
+  project          Project  @relation(fields: [projectId], references: [id])
+
+  @@map("optimization_results")
+}
