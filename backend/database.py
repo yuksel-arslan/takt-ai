@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 # Neon DB için optimize edilmiş engine
 # Serverless ortamda connection pooling stratejisi önemli
 engine = create_engine(
-    settings.DATABASE_URL,
+    str(settings.DATABASE_URL),
     pool_size=settings.DB_POOL_SIZE,
     max_overflow=settings.DB_MAX_OVERFLOW,
     pool_timeout=settings.DB_POOL_TIMEOUT,
