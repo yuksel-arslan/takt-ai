@@ -36,8 +36,11 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def ensure_ssl(cls, v: str) -> str:
-        if isinstance(v, str) and "sslmode=require" not in v:
-            v += "&sslmode=require" if "?" in v else "?sslmode=require"
+        if isinstance(v, str):
+            # Strip surrounding quotes that some platforms inject
+            v = v.strip().strip("\"'")
+            if "sslmode=require" not in v:
+                v += "&sslmode=require" if "?" in v else "?sslmode=require"
         return v
 
 
