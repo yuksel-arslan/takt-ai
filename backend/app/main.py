@@ -31,8 +31,9 @@ async def lifespan(app: FastAPI):
 
     logger.info("TAKT AI shutting down...")
     try:
-        engine.dispose()
-        logger.info("Database connections closed")
+        if engine is not None:
+            engine.dispose()
+            logger.info("Database connections closed")
     except Exception as e:
         logger.error("Error closing connections: %s", e)
 
@@ -57,6 +58,7 @@ def create_app() -> FastAPI:
     if extra:
         cors_origins.extend([o.strip() for o in extra.split(",") if o.strip()])
 
+    logger.info("CORS allowed origins: %s", cors_origins)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=cors_origins,

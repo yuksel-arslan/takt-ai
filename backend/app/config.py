@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from typing import Optional
 
 
@@ -33,11 +33,20 @@ class Settings(BaseSettings):
         "case_sensitive": False,
     }
 
+    @model_validator(mode="before")
+    @classmethod
+    def strip_env_quotes(cls, values):
+        """Strip surrounding quotes that platforms (Railway) inject into env vars."""
+        if isinstance(values, dict):
+            for key, val in values.items():
+                if isinstance(val, str):
+                    values[key] = val.strip().strip("\"'")
+        return values
+
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def ensure_ssl(cls, v: str) -> str:
         if isinstance(v, str):
-            # Strip surrounding quotes that some platforms inject
             v = v.strip().strip("\"'")
             if "sslmode=require" not in v:
                 v += "&sslmode=require" if "?" in v else "?sslmode=require"
