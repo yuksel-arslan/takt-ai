@@ -24,7 +24,7 @@ def _build_engine():
         pool_pre_ping=settings.DB_POOL_PRE_PING,
         echo=settings.DEBUG,
         connect_args={
-            "connect_timeout": 15,
+            "connect_timeout": 10,
             "keepalives": 1,
             "keepalives_idle": 30,
             "keepalives_interval": 10,
@@ -60,23 +60,13 @@ def get_db() -> Generator:
 
 
 def init_db() -> None:
-    """Create tables with retry for Neon cold start."""
+    """Create tables - single attempt, no retry to avoid blocking lifespan."""
     if engine is None:
         logger.error("Engine not available, skipping table creation")
         return
 
-    import time
-
-    for attempt in range(3):
-        try:
-            Base.metadata.create_all(bind=engine)
-            logger.info("Database tables created/verified")
-            return
-        except Exception as e:
-            logger.warning(
-                "init_db attempt %d failed: %s", attempt + 1, e
-            )
-            if attempt < 2:
-                time.sleep(2 ** (attempt + 1))
-            else:
-                raise
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables created/verified")
+    except Exception as e:
+        logger.warning("init_db failed (tables may already exist): %s", e)
