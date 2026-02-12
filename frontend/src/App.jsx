@@ -8,8 +8,8 @@ import ProjectForm from './components/ProjectForm'
 import OptimizationResults from './components/OptimizationResults'
 import axios from 'axios'
 
-// Axios config
-axios.defaults.baseURL = 'http://localhost:8000'
+// Axios config - production'da Vite env variable kullan, yoksa localhost
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)

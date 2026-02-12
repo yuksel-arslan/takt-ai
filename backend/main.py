@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from contextlib import asynccontextmanager
 import logging
+import os
 import time
 import jwt
 from typing import Optional
@@ -58,14 +59,22 @@ app = FastAPI(
     redoc_url="/api/redoc",
 )
 
-# CORS
+# CORS - Vercel preview URL'leri dahil
+cors_origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://takt-ai.vercel.app",
+]
+
+# Environment'tan ek origin'ler ekle (virgülle ayrılmış)
+extra_origins = os.environ.get("CORS_ORIGINS", "")
+if extra_origins:
+    cors_origins.extend([o.strip() for o in extra_origins.split(",") if o.strip()])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "https://takt-ai.vercel.app",  # Frontend domain
-    ],
+    allow_origins=cors_origins,
+    allow_origin_regex=r"https://takt-.*\.vercel\.app",  # Tüm Vercel preview URL'leri
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
