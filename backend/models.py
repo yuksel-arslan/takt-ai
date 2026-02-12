@@ -7,7 +7,7 @@ class User(Base):
     __tablename__ = "users"
     
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    email = Column(String, unique=True, indexable=True, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
     name = Column(String, nullable=False)
     company = Column(String)
     hashed_password = Column(String, nullable=False)
@@ -25,7 +25,7 @@ class Project(Base):
     __tablename__ = "projects"
     
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String, indexable=True, nullable=False)
+    user_id = Column(String, index=True, nullable=False)
     name = Column(String, nullable=False)
     description = Column(Text)
     project_data = Column(JSON)  # Metraj verisi
@@ -41,7 +41,7 @@ class OptimizationResult(Base):
     __tablename__ = "optimization_results"
     
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    project_id = Column(String, indexable=True, nullable=False)
+    project_id = Column(String, index=True, nullable=False)
     best_plan = Column(JSON)
     scenarios = Column(JSON)
     evolution_history = Column(JSON)

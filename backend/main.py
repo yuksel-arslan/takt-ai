@@ -2,10 +2,10 @@ from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from contextlib import asynccontextmanager
+from sqlalchemy import text
 import logging
 import os
 import time
-import jwt
 from typing import Optional
 
 from config import settings
@@ -13,7 +13,7 @@ from database import engine, SessionLocal, init_db, get_db
 from models import Base, User, Project, OptimizationResult
 from genetic_algorithm import TaktGeneticAlgorithm, TaktConfig
 from neon_client import neon_client
-from auth import create_access_token, verify_password, get_password_hash
+from auth import create_access_token, verify_password, get_password_hash, verify_token
 
 # Logging
 logging.basicConfig(level=logging.INFO)
@@ -44,7 +44,7 @@ async def lifespan(app: FastAPI):
     # 3. Shutdown - connection pool'u temizle
     logger.info("🛑 TAKT AI shutting down...")
     try:
-        await engine.dispose()
+        engine.dispose()
         logger.info("✅ Database connections closed")
     except Exception as e:
         logger.error(f"❌ Error closing connections: {e}")
@@ -89,7 +89,7 @@ async def health_check():
     """Neon DB bağlantısını test et"""
     try:
         db = SessionLocal()
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         db.close()
         db_status = "healthy"
     except Exception as e:
