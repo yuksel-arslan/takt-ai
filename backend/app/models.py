@@ -27,7 +27,7 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    projects = relationship("Project", back_populates="owner", lazy="dynamic")
+    projects = relationship("Project", back_populates="owner")
 
 
 class Project(Base):
@@ -45,12 +45,7 @@ class Project(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     owner = relationship("User", back_populates="projects")
-    results = relationship(
-        "OptimizationResult",
-        back_populates="project",
-        lazy="dynamic",
-        order_by="OptimizationResult.created_at.desc()",
-    )
+    results = relationship("OptimizationResult", back_populates="project")
 
 
 class OptimizationResult(Base):
