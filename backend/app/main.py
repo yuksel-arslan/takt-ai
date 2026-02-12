@@ -1,4 +1,5 @@
 import logging
+import threading
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -15,14 +16,9 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("TAKT AI starting up...")
-    # init_db has built-in retry for Neon cold-start
-    try:
-        init_db()
-        logger.info("Database initialized")
-    except Exception as e:
-        # Do NOT crash - let the app start so Railway health checks pass.
-        # DB-dependent endpoints will fail individually until Neon wakes up.
-        logger.error("Database init deferred (will work on first request): %s", e)
+    # Run init_db in background thread so it never blocks the lifespan.
+    # Railway health check must respond within 30s; Neon cold-start can take 15s+.
+    threading.Thread(target=_safe_init_db, daemon=True).start()
 
     if settings.NEON_API_KEY and settings.NEON_PROJECT_ID:
         logger.info("Neon API configured")
@@ -36,6 +32,14 @@ async def lifespan(app: FastAPI):
             logger.info("Database connections closed")
     except Exception as e:
         logger.error("Error closing connections: %s", e)
+
+
+def _safe_init_db():
+    try:
+        init_db()
+        logger.info("Database initialized (background)")
+    except Exception as e:
+        logger.error("Database init failed (endpoints will work on first request): %s", e)
 
 
 def create_app() -> FastAPI:
