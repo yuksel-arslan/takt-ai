@@ -1,3 +1,5 @@
+import re
+
 from pydantic_settings import BaseSettings
 from pydantic import field_validator, model_validator
 from typing import Optional
@@ -45,11 +47,22 @@ class Settings(BaseSettings):
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
-    def ensure_ssl(cls, v: str) -> str:
-        if isinstance(v, str):
-            v = v.strip().strip("\"'")
-            if "sslmode=require" not in v:
-                v += "&sslmode=require" if "?" in v else "?sslmode=require"
+    def clean_database_url(cls, v: str) -> str:
+        if not isinstance(v, str):
+            return v
+        # Strip surrounding quotes
+        v = v.strip().strip("\"'")
+        # Use urllib to properly remove channel_binding param
+        # (incompatible with Neon PgBouncer pooler)
+        from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+        parsed = urlparse(v)
+        params = parse_qs(parsed.query, keep_blank_values=True)
+        params.pop("channel_binding", None)
+        clean_query = urlencode(params, doseq=True)
+        v = urlunparse(parsed._replace(query=clean_query))
+        # Ensure sslmode=require is present
+        if "sslmode=require" not in v:
+            v += "&sslmode=require" if "?" in v else "?sslmode=require"
         return v
 
 
